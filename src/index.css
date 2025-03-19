@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-dark text-gray-200;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+@layer components {
+  .card {
+    @apply bg-dark-lighter rounded-xl p-6 shadow-lg;
+  }
+  
+  .input {
+    @apply bg-dark-light rounded-lg px-4 py-2 text-gray-200 border border-gray-700 focus:border-primary focus:outline-none transition-colors;
+  }
+  
+  .btn {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200 transform hover:scale-105;
+  }
+  
+  .btn-primary {
+    @apply btn bg-primary text-dark hover:bg-primary-dark;
+  }
+  
+  .btn-secondary {
+    @apply btn bg-dark-light text-gray-200 hover:bg-dark-lighter;
+  }
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
