@@ -17,6 +17,8 @@ export const UserInfo: React.FC = () => {
   const [additionalIncome, setAdditionalIncome] = useState(0);
   const [incomeHistory, setIncomeHistory] = useState<number[]>([]);
 
+  const [isViewingIncomeHistory, setIsViewingIncomeHistory] = useState(false);
+
   const [isAddingSavings, setIsAddingSavings] = useState(false);
   const [additionalSavings, setAdditionalSavings] = useState(0);
   const [savingsHistory, setSavingsHistory] = useState<number[]>([]);
@@ -139,16 +141,16 @@ export const UserInfo: React.FC = () => {
           {incomeHistory.length > 0 && (
             <div className="mt-3">
               <button
-                onClick={() => setIsAddingIncome((prev) => !prev)}
+                onClick={() => setIsViewingIncomeHistory((prev) => !prev)} // Toggle only income history
                 className="text-primary underline text-sm"
               >
-                {isAddingIncome ? "Hide Income History" : "View Income History"}
+                {isViewingIncomeHistory ? "Hide Income History" : "View Income History"}
               </button>
             </div>
           )}
 
           {/* Income History Dropdown */}
-          {isAddingIncome && incomeHistory.length > 0 && (
+          {isViewingIncomeHistory && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
