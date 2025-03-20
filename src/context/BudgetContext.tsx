@@ -9,6 +9,7 @@ interface BudgetContextType {
   updateBudgetItem: (id: string, item: Partial<BudgetItem>) => void;
   deleteBudgetItem: (id: string) => void;
   savingsGoals: SavingsGoal[];
+  setSavingsGoals: (goals: SavingsGoal[]) => void;
   addSavingsGoal: (goal: Omit<SavingsGoal, 'id' | 'currentAmount'>) => void;
   updateSavingsGoal: (id: string, goal: Partial<SavingsGoal>) => void;
   deleteSavingsGoal: (id: string) => void;
@@ -58,6 +59,7 @@ export const BudgetProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       deleteBudgetItem,
       savingsGoals,
       addSavingsGoal,
+      setSavingsGoals,
       updateSavingsGoal,
       deleteSavingsGoal,
     }}>

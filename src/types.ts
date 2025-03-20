@@ -3,6 +3,7 @@ export interface BudgetItem {
   name: string;
   category: string;
   amount: number;
+  color?: string;
 }
 
 export interface SavingsGoal {

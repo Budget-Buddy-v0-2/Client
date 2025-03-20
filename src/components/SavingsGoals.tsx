@@ -24,7 +24,7 @@ export const SavingsGoals: React.FC = () => {
       <h2 className="text-2xl font-bold mb-6 text-primary">Savings Goals</h2>
 
       {savingsGoals.length < 4 && (
-        <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-1 gap-4">
           <input
             type="text"
             value={newGoal.name}
@@ -52,7 +52,7 @@ export const SavingsGoals: React.FC = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
         <AnimatePresence>
           {savingsGoals.map((goal) => {
             const progress = (goal.currentAmount / goal.targetAmount) * 100;
@@ -99,9 +99,8 @@ export const SavingsGoals: React.FC = () => {
                     initial={{ width: 0 }}
                     animate={{ width: `${Math.min(progress, 100)}%` }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
-                    className={`h-full rounded-full ${
-                      isComplete ? 'bg-primary animate-pulse' : 'bg-primary'
-                    }`}
+                    className={`h-full rounded-full ${isComplete ? 'bg-primary animate-pulse' : 'bg-primary'
+                      }`}
                   />
                 </div>
                 <div className="text-right text-sm text-gray-400 mt-1">

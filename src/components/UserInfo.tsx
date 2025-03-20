@@ -1,39 +1,68 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { DollarSign, PiggyBank, Wallet, Check, Plus, Trash2, ChevronDown } from 'lucide-react';
+import { DollarSign, PiggyBank, Wallet, Check, Plus } from 'lucide-react';
 import { useBudget } from '../context/BudgetContext';
 import { NumericFormat } from 'react-number-format';
+import { SavingsGoal } from '../types';
 
 export const UserInfo: React.FC = () => {
-  const { income, setIncome, budgetItems, savingsGoals } = useBudget();
+  const { income, setIncome, budgetItems, savingsGoals, setSavingsGoals } = useBudget();
+  const [totalSavingsAmount, setTotalSavingsAmount] = useState(0);
 
   const totalExpenses = budgetItems.reduce((sum, item) => sum + item.amount, 0);
   const leftover = income - totalExpenses;
-  const totalSavings = savingsGoals.reduce((sum, goal) => sum + goal.currentAmount, 0);
+  const totalSavings = totalSavingsAmount + savingsGoals.reduce((sum, goal) => sum + goal.currentAmount, 0);
 
   // State for adding income
-  const [isAdding, setIsAdding] = useState(false);
+  const [isAddingIncome, setIsAddingIncome] = useState(false);
   const [additionalIncome, setAdditionalIncome] = useState(0);
   const [incomeHistory, setIncomeHistory] = useState<number[]>([]);
-  const [showIncomeHistory, setShowIncomeHistory] = useState(false); // Toggle history visibility
 
-  const handleAddIncome = () => {
-    if (additionalIncome > 0) {
-      setIncome(income + additionalIncome); // Add new amount to income
-      setIncomeHistory([...incomeHistory, additionalIncome]); // Store in history
-      setAdditionalIncome(0);
-      setIsAdding(false);
+  // State for adding savings
+  const [isAddingSavings, setIsAddingSavings] = useState(false);
+  const [additionalSavings, setAdditionalSavings] = useState(0);
+  const [savingsHistory, setSavingsHistory] = useState<number[]>([]);
+
+  // Ensure Enter key submits income
+  const handleKeyDownIncome = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      handleAddIncome();
     }
   };
 
-  const handleDeleteIncome = (amount: number, index: number) => {
-    setIncome(income - amount); // Subtract from total income
-    setIncomeHistory(incomeHistory.filter((_, i) => i !== index)); // Remove from history
+  const handleKeyDownSavings = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      handleAddSavings();
+    }
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
-      handleAddIncome();
+  const handleAddIncome = () => {
+    if (additionalIncome > 0) {
+      setIncome(income + additionalIncome);
+      setIncomeHistory([...incomeHistory, additionalIncome]);
+      setAdditionalIncome(0);
+      setIsAddingIncome(false);
+    }
+  };
+
+  const handleAddSavings = () => {
+    if (additionalSavings > 0) {
+      if (savingsGoals.length > 0) {
+        // ✅ If goals exist, update them
+        const updatedGoals = savingsGoals.map((goal) => ({
+          ...goal,
+          currentAmount: goal.currentAmount + additionalSavings,
+        }));
+        setSavingsGoals(updatedGoals);
+      }
+      // ✅ If no goals exist, just add to total savings
+      setTotalSavingsAmount((prev) => prev + additionalSavings);
+
+      // ✅ Track savings history
+      setSavingsHistory((prevHistory) => [...prevHistory, additionalSavings]);
+
+      setAdditionalSavings(0);
+      setIsAddingSavings(false);
     }
   };
 
@@ -42,15 +71,14 @@ export const UserInfo: React.FC = () => {
       <h2 className="text-2xl font-bold mb-6 text-primary">Financial Summary</h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
         {/* Monthly Income Section */}
         <div className="p-4 bg-dark rounded-lg">
           <div className="flex items-center gap-3 mb-2">
             <DollarSign className="text-primary" />
             <span className="text-gray-400">Monthly Income</span>
           </div>
-
-          {/* Input for adding income */}
-          {isAdding ? (
+          {isAddingIncome ? (
             <div className="flex items-center gap-2">
               <NumericFormat
                 value={additionalIncome}
@@ -60,60 +88,19 @@ export const UserInfo: React.FC = () => {
                 className="input w-full"
                 placeholder="Add amount"
                 autoFocus
-                onKeyDown={handleKeyDown} // Save on Enter
+                onKeyDown={handleKeyDownIncome} // ✅ Ensure Enter key submits income
               />
               <button onClick={handleAddIncome} className="bg-primary text-white p-2 rounded-md hover:bg-opacity-80 transition">
                 <Check size={20} />
               </button>
             </div>
           ) : (
-            <div
-              className="flex justify-between items-center cursor-pointer p-2 rounded hover:bg-gray-800 transition"
-              onClick={() => setIsAdding(true)}
-            >
-              <span className="text-white text-lg">${income.toLocaleString()}</span>
+            <div className="flex justify-between items-center cursor-pointer p-2 rounded hover:bg-gray-800 transition" onClick={() => setIsAddingIncome(true)}>
+              <span className="text-white text-lg">
+                ${income.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
               <Plus size={18} className="text-primary" />
             </div>
-          )}
-
-          {/* Toggle button to show/hide income history */}
-          {incomeHistory.length > 0 && (
-            <button
-              onClick={() => setShowIncomeHistory(!showIncomeHistory)}
-              className="mt-0 flex justify-center items-center w-full"
-            >
-              <motion.div
-                animate={{ rotate: showIncomeHistory ? 180 : 0 }}
-                transition={{ duration: 0.3 }}
-                className="w-full flex justify-center items-center"
-              >
-                <ChevronDown size={20} className="text-gray-400 hover:text-white" />
-              </motion.div>
-            </button>
-          )}
-
-          {/* Income History List (only visible when toggled) */}
-          {showIncomeHistory && incomeHistory.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              transition={{ duration: 0.3 }}
-              className="bg-neutral-700 p-3 mt-3 rounded-lg max-h-32 overflow-y-auto border border-gray-700"
-            >
-              <ul className="space-y-1">
-                {incomeHistory.map((amount, index) => (
-                  <li key={index} className="flex justify-between items-center bg-dark p-2 rounded-md border border-gray-800">
-                    <span className="text-gray-300">+${amount.toLocaleString()}</span>
-                    <button
-                      onClick={() => handleDeleteIncome(amount, index)}
-                      className="text-red-500 hover:text-gray-300 transition"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
           )}
         </div>
 
@@ -123,7 +110,9 @@ export const UserInfo: React.FC = () => {
             <Wallet className="text-primary" />
             <span className="text-gray-400">Total Expenses</span>
           </div>
-          <div className="text-2xl font-bold">${totalExpenses.toLocaleString()}</div>
+          <div className="text-2xl font-bold">
+            ${totalExpenses.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          </div>
         </div>
 
         {/* Leftover Money Section */}
@@ -133,7 +122,7 @@ export const UserInfo: React.FC = () => {
             <span className="text-gray-400">Leftover</span>
           </div>
           <div className={`text-2xl font-bold ${leftover >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-            ${Math.abs(leftover).toLocaleString()}
+            ${Math.abs(leftover).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
         </div>
 
@@ -143,7 +132,31 @@ export const UserInfo: React.FC = () => {
             <PiggyBank className="text-primary" />
             <span className="text-gray-400">Total Savings</span>
           </div>
-          <div className="text-2xl font-bold text-primary">${totalSavings.toLocaleString()}</div>
+
+          {isAddingSavings ? (
+            <div className="flex items-center gap-2">
+              <NumericFormat
+                value={additionalSavings}
+                onValueChange={(values) => setAdditionalSavings(values.floatValue || 0)}
+                thousandSeparator={true}
+                prefix="$"
+                className="input w-full"
+                placeholder="Add amount"
+                autoFocus
+                onKeyDown={handleKeyDownSavings} // ✅ Ensure Enter key submits savings
+              />
+              <button onClick={handleAddSavings} className="bg-primary text-white p-2 rounded-md hover:bg-opacity-80 transition">
+                <Check size={20} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex justify-between items-center cursor-pointer p-2 rounded hover:bg-gray-800 transition" onClick={() => setIsAddingSavings(true)}>
+              <span className="text-white text-lg">
+                ${totalSavings.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+              <Plus size={18} className="text-primary" />
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
