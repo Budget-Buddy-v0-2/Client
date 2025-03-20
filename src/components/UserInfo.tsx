@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { DollarSign, PiggyBank, Wallet, Check, Plus } from 'lucide-react';
 import { useBudget } from '../context/BudgetContext';
@@ -13,17 +13,36 @@ export const UserInfo: React.FC = () => {
   const leftover = income - totalExpenses;
   const totalSavings = totalSavingsAmount + savingsGoals.reduce((sum, goal) => sum + goal.currentAmount, 0);
 
-  // State for adding income
   const [isAddingIncome, setIsAddingIncome] = useState(false);
   const [additionalIncome, setAdditionalIncome] = useState(0);
   const [incomeHistory, setIncomeHistory] = useState<number[]>([]);
 
-  // State for adding savings
   const [isAddingSavings, setIsAddingSavings] = useState(false);
   const [additionalSavings, setAdditionalSavings] = useState(0);
   const [savingsHistory, setSavingsHistory] = useState<number[]>([]);
 
-  // Ensure Enter key submits income
+  // 🔹 Refs for detecting clicks outside the input fields
+  const incomeRef = useRef<HTMLDivElement>(null);
+  const savingsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (incomeRef.current && !incomeRef.current.contains(event.target as Node)) {
+        setIsAddingIncome(false);
+        setAdditionalIncome(0);
+      }
+      if (savingsRef.current && !savingsRef.current.contains(event.target as Node)) {
+        setIsAddingSavings(false);
+        setAdditionalSavings(0);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const handleKeyDownIncome = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
       handleAddIncome();
@@ -48,22 +67,28 @@ export const UserInfo: React.FC = () => {
   const handleAddSavings = () => {
     if (additionalSavings > 0) {
       if (savingsGoals.length > 0) {
-        // ✅ If goals exist, update them
         const updatedGoals = savingsGoals.map((goal) => ({
           ...goal,
           currentAmount: goal.currentAmount + additionalSavings,
         }));
         setSavingsGoals(updatedGoals);
       }
-      // ✅ If no goals exist, just add to total savings
       setTotalSavingsAmount((prev) => prev + additionalSavings);
-
-      // ✅ Track savings history
       setSavingsHistory((prevHistory) => [...prevHistory, additionalSavings]);
-
       setAdditionalSavings(0);
       setIsAddingSavings(false);
     }
+  };
+
+  // 🔹 Your original handleDeleteIncome function—untouched
+  const handleDeleteIncome = (index: number) => {
+    setIncomeHistory((prevHistory) => {
+      const deletedAmount: number = prevHistory[index];
+      const updatedHistory = prevHistory.filter((_, i) => i !== index);
+      setIncome(income - deletedAmount);
+      setIsAddingIncome(false);
+      return updatedHistory;
+    });
   };
 
   return (
@@ -73,11 +98,12 @@ export const UserInfo: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
 
         {/* Monthly Income Section */}
-        <div className="p-4 bg-dark rounded-lg">
+        <div className="p-4 bg-dark rounded-lg relative" ref={incomeRef}>
           <div className="flex items-center gap-3 mb-2">
             <DollarSign className="text-primary" />
             <span className="text-gray-400">Monthly Income</span>
           </div>
+
           {isAddingIncome ? (
             <div className="flex items-center gap-2">
               <NumericFormat
@@ -88,19 +114,61 @@ export const UserInfo: React.FC = () => {
                 className="input w-full"
                 placeholder="Add amount"
                 autoFocus
-                onKeyDown={handleKeyDownIncome} // ✅ Ensure Enter key submits income
+                onKeyDown={handleKeyDownIncome}
               />
-              <button onClick={handleAddIncome} className="bg-primary text-white p-2 rounded-md hover:bg-opacity-80 transition">
+              <button
+                onClick={handleAddIncome}
+                className="bg-primary text-white p-2 rounded-md hover:bg-opacity-80 transition"
+              >
                 <Check size={20} />
               </button>
             </div>
           ) : (
-            <div className="flex justify-between items-center cursor-pointer p-2 rounded hover:bg-gray-800 transition" onClick={() => setIsAddingIncome(true)}>
+            <div
+              className="flex justify-between items-center cursor-pointer p-2 rounded hover:bg-gray-800 transition"
+              onClick={() => setIsAddingIncome(true)}
+            >
               <span className="text-white text-lg">
                 ${income.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
               <Plus size={18} className="text-primary" />
             </div>
+          )}
+
+          {/* Dropdown Button for Income History */}
+          {incomeHistory.length > 0 && (
+            <div className="mt-3">
+              <button
+                onClick={() => setIsAddingIncome((prev) => !prev)}
+                className="text-primary underline text-sm"
+              >
+                {isAddingIncome ? "Hide Income History" : "View Income History"}
+              </button>
+            </div>
+          )}
+
+          {/* Income History Dropdown */}
+          {isAddingIncome && incomeHistory.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute top-full left-0 w-full bg-dark p-3 rounded-lg shadow-lg mt-2 max-h-40 overflow-auto"
+            >
+              <ul className="space-y-2">
+                {incomeHistory.map((entry, index) => (
+                  <li key={index} className="flex justify-between items-center p-2 bg-gray-800 rounded-lg">
+                    <span className="text-white">${entry.toLocaleString()}</span>
+                    <button
+                      onClick={() => handleDeleteIncome(index)}
+                      className="text-red-400 hover:text-red-600"
+                    >
+                      ✖
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
           )}
         </div>
 
@@ -127,7 +195,7 @@ export const UserInfo: React.FC = () => {
         </div>
 
         {/* Total Savings Section */}
-        <div className="p-4 bg-dark rounded-lg">
+        <div className="p-4 bg-dark rounded-lg" ref={savingsRef}>
           <div className="flex items-center gap-3 mb-2">
             <PiggyBank className="text-primary" />
             <span className="text-gray-400">Total Savings</span>
@@ -143,7 +211,7 @@ export const UserInfo: React.FC = () => {
                 className="input w-full"
                 placeholder="Add amount"
                 autoFocus
-                onKeyDown={handleKeyDownSavings} // ✅ Ensure Enter key submits savings
+                onKeyDown={handleKeyDownSavings}
               />
               <button onClick={handleAddSavings} className="bg-primary text-white p-2 rounded-md hover:bg-opacity-80 transition">
                 <Check size={20} />
@@ -159,6 +227,6 @@ export const UserInfo: React.FC = () => {
           )}
         </div>
       </div>
-    </motion.div>
+    </motion.div >
   );
 };
