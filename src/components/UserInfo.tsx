@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { DollarSign, PiggyBank, Wallet, Check, Plus } from 'lucide-react';
 import { useBudget } from '../context/BudgetContext';
 import { NumericFormat } from 'react-number-format';
-import { SavingsGoal } from '../types';
+// import { SavingsGoal } from '../types';
 
 export const UserInfo: React.FC = () => {
   const { income, setIncome, budgetItems, savingsGoals, setSavingsGoals } = useBudget();
@@ -27,6 +27,7 @@ export const UserInfo: React.FC = () => {
   const incomeRef = useRef<HTMLDivElement>(null);
   const savingsRef = useRef<HTMLDivElement>(null);
 
+  // 🔹 Effect to handle clicks outside the input fields
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (incomeRef.current && !incomeRef.current.contains(event.target as Node)) {
@@ -39,24 +40,28 @@ export const UserInfo: React.FC = () => {
       }
     };
 
+    // 🔹 Event listener to handle clicks outside the input fieldss
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
+  // 🔹 Function to handle Enter key for adding income
   const handleKeyDownIncome = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
       handleAddIncome();
     }
   };
 
+  // 🔹 Function to handle Enter key for adding savings
   const handleKeyDownSavings = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
       handleAddSavings();
     }
   };
 
+  // 🔹 Function to handle adding income
   const handleAddIncome = () => {
     if (additionalIncome > 0) {
       setIncome(income + additionalIncome);
@@ -66,6 +71,7 @@ export const UserInfo: React.FC = () => {
     }
   };
 
+  // 🔹 Function to handle adding savings
   const handleAddSavings = () => {
     if (additionalSavings > 0) {
       if (savingsGoals.length > 0) {

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, X, Edit2, Save } from 'lucide-react';
+import { Plus, Trash2, Edit2, Save } from 'lucide-react';
 import { useBudget } from '../context/BudgetContext';
 import { BudgetItem } from '../types';
 import { NumericFormat } from 'react-number-format';
