@@ -213,7 +213,7 @@ export const UserInfo: React.FC = () => {
             <div className="flex items-center gap-2">
               <NumericFormat
                 value={additionalSavings}
-                onValueChange={(values) => setAdditionalSavings(values.floatValue || 0)}
+                onValueChange={(values) => setAdditionalSavings(values.floatValue || 0)} // set value of additionalSavings on change of the value
                 thousandSeparator={true}
                 prefix="$"
                 className="input w-full"
